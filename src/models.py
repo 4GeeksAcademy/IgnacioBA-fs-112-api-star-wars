@@ -29,6 +29,9 @@ class Planet(db.Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
+    climate: Mapped[str] = mapped_column(String(100))
+    terrain: Mapped[str] = mapped_column(String(100))
+    population: Mapped[str] = mapped_column(String(50))
     
     favorites: Mapped[list["Favorite"]] = relationship(back_populates="planet", cascade="all, delete")
 
@@ -36,6 +39,9 @@ class Planet(db.Model):
         return {
             "id": self.id,
             "name": self.name,
+            "climate": self.climate,
+            "terrain": self.terrain,
+            "population": self.population
         }
     
 class Character(db.Model):
@@ -43,6 +49,9 @@ class Character(db.Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
+    gender: Mapped[str] = mapped_column(String(20))
+    birth_year: Mapped[str] = mapped_column(String(20))
+    eye_color: Mapped[str] = mapped_column(String(20))
     
     favorites: Mapped[list["Favorite"]] = relationship(back_populates="character", cascade="all, delete")
 
@@ -50,6 +59,9 @@ class Character(db.Model):
         return {
             "id": self.id,
             "name": self.name,
+            "gender": self.gender,
+            "birth_year": self.birth_year,
+            "eye_color": self.eye_color
         }
 
 class Favorite(db.Model):
@@ -69,4 +81,6 @@ class Favorite(db.Model):
         return {
             "id": self.id,
             "user_id": self.user_id,
+            "character_id": self.character_id,
+            "planet_id": self.planet_id
         }
