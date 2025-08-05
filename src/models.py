@@ -44,6 +44,14 @@ class Planet(db.Model):
             "population": self.population
         }
     
+    def all_user_favorites(self):
+        results_favorites = list(map(lambda item: item.serialize(),self.favorites))
+        return{
+            "id": self.id,
+            "username": self.username,
+            "favorites": results_favorites
+        }
+    
 class Character(db.Model):
     __tablename__ = "character"
 
@@ -78,9 +86,24 @@ class Favorite(db.Model):
     planet: Mapped["Planet"] = relationship(back_populates="favorites")
 
     def serialize(self):
-        return {
-            "id": self.id,
-            "user_id": self.user_id,
-            "character_id": self.character_id,
-            "planet_id": self.planet_id
+        # return {
+        #     "id": self.id,
+        #     "user_id": self.user_id,
+        #     "character_id": self.character_id,
+        #     "planet_id": self.planet_id
+        # }
+        result = {
+            "id": self.id
         }
+
+        if self.character_id and self.character:
+            result["resource_id"] = self.character_id
+            result["type"] = "character"
+            result["name"] = self.character.name
+
+        elif self.planet_id and self.planet:
+            result["resource_id"] = self.planet_id
+            result["type"] = "planet"
+            result["name"] = self.planet.name
+
+        return result
