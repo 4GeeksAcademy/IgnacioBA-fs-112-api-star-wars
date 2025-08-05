@@ -31,7 +31,7 @@ CORS(app)
 setup_admin(app)
 
 # Setup the Flask-JWT-Extended extension
-app.config["JWT_SECRET_KEY"] = "super-secret"  
+app.config["JWT_SECRET_KEY"] = "example_password"  
 jwt = JWTManager(app)
 
 # Handle/serialize errors like a JSON object
@@ -110,17 +110,62 @@ def get_one_planet(planet_id):
     except Exception as e:
         return jsonify({"error": "Internal server error", "details": str(e)}), 500
 
-# @app.route("/login", methods=["POST"])
-# def login():
-#     email = request.json.get("email", None)
-#     password = request.json.get("password", None)
-#     if email != "test" or password != "test":
-#         return jsonify({"msg": "Bad email or password"}), 401
+@app.route('/signup', methods=['POST'])
+def signup():
+    try:
+        data = request.get_json()
 
-#     email = db.session.execute(select(email).where(email.user_id == 3)).scalar_one_or_none()
-    
-#     access_token = create_access_token(identity=email)
-#     return jsonify(access_token=access_token)
+        email = data.get('email')
+        password = str(data.get('password'))  #
+        first_name = data.get('first_name')
+        last_name = data.get('last_name')
+        is_active = data.get('is_active', True)  
+
+        if not email or not password:
+            return jsonify({"msg": "Email and password are required"}), 400
+
+        if User.query.filter_by(email=email).first():
+            return jsonify({"msg": "User already exists"}), 400
+
+        new_user = User(
+            email=email,
+            password=password,
+            first_name=first_name,
+            last_name=last_name,
+            is_active=is_active
+        )
+
+        db.session.add(new_user)
+        db.session.commit()
+
+        return jsonify({"msg": "User created successfully"}), 201
+
+    except Exception as e:
+        return jsonify({"error": "Server error", "details": str(e)}), 500
+
+@app.route('/login', methods=['POST'])
+def login():
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        password = str(data.get('password'))
+
+        if not email or not password:
+            return jsonify({"msg": "Email and password are required"}), 400
+
+        user = User.query.filter_by(email=email).first()
+
+        if not user:
+            return jsonify({"msg": "User not found"}), 404
+
+        if user.password != password:
+            return jsonify({"msg": "Incorrect password"}), 401
+
+        access_token = create_access_token(identity=user.id)
+        return jsonify(access_token=access_token), 200
+
+    except Exception as e:
+        return jsonify({"error": "Server error", "details": str(e)}), 500
 
 # Get de todos los users   
 @app.route("/users", methods=["GET"])
@@ -140,14 +185,17 @@ def get_all_users():
         return jsonify({"error": "Internal server error", "details": str(e)}), 500
 
 # Get de los favoritos de un user
-@app.route("/users/<int:user_id>/favorites", methods=["GET"])
-def get_user_favorites(user_id):
+@app.route("/users/favorites", methods=["GET"])
+@jwt_required()  
+def get_user_favorites():
     try:
+        user_id = get_jwt_identity()
         user = User.query.get(user_id)
         if not user:
             return jsonify({"error": "User not found"}), 404
 
         favorites = Favorite.query.filter_by(user_id=user_id).all()
+
         if not favorites:
             return jsonify({"message": "No favorites found for this user."}), 404
 

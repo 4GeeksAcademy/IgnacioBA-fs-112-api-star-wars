@@ -12,7 +12,7 @@ class User(db.Model):
     password: Mapped[str] = mapped_column(nullable=False)
     first_name: Mapped[str] = mapped_column(String(50), nullable=False)
     last_name: Mapped[str] = mapped_column(String(50), nullable=False)
-    is_active: Mapped[bool] = mapped_column(Boolean(), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean(), nullable=True)
 
     favorites: Mapped[list["Favorite"]] = relationship(back_populates="user", cascade="all, delete")
 
@@ -77,9 +77,9 @@ class Favorite(db.Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
-    planet_id: Mapped[int] = mapped_column(ForeignKey("planet.id"))
-    character_id: Mapped[int] = mapped_column(ForeignKey("character.id"))
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False)
+    planet_id: Mapped[int] = mapped_column(ForeignKey("planet.id"), nullable=False)
+    character_id: Mapped[int] = mapped_column(ForeignKey("character.id"), nullable=False)
 
     user: Mapped["User"] = relationship(back_populates="favorites")
     character: Mapped["Character"] = relationship(back_populates="favorites")
