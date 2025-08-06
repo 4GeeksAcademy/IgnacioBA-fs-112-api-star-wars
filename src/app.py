@@ -161,7 +161,7 @@ def login():
         if user.password != password:
             return jsonify({"msg": "Incorrect password"}), 401
 
-        access_token = create_access_token(identity=user.id)
+        access_token = create_access_token(identity=str(user.id))
         return jsonify(access_token=access_token), 200
 
     except Exception as e:
@@ -189,7 +189,7 @@ def get_all_users():
 @jwt_required()  
 def get_user_favorites():
     try:
-        user_id = get_jwt_identity()
+        user_id = int(get_jwt_identity())
         user = User.query.get(user_id)
         if not user:
             return jsonify({"error": "User not found"}), 404
