@@ -116,7 +116,7 @@ def signup():
         data = request.get_json()
 
         email = data.get('email')
-        password = str(data.get('password'))  #
+        password = str(data.get('password'))  
         first_name = data.get('first_name')
         last_name = data.get('last_name')
         is_active = data.get('is_active', True)  

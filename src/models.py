@@ -78,20 +78,14 @@ class Favorite(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
 
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False)
-    planet_id: Mapped[int] = mapped_column(ForeignKey("planet.id"), nullable=False)
-    character_id: Mapped[int] = mapped_column(ForeignKey("character.id"), nullable=False)
+    planet_id: Mapped[int] = mapped_column(ForeignKey("planet.id"), nullable=True)
+    character_id: Mapped[int] = mapped_column(ForeignKey("character.id"), nullable=True)
 
     user: Mapped["User"] = relationship(back_populates="favorites")
     character: Mapped["Character"] = relationship(back_populates="favorites")
     planet: Mapped["Planet"] = relationship(back_populates="favorites")
 
     def serialize(self):
-        # return {
-        #     "id": self.id,
-        #     "user_id": self.user_id,
-        #     "character_id": self.character_id,
-        #     "planet_id": self.planet_id
-        # }
         result = {
             "id": self.id
         }
@@ -107,3 +101,10 @@ class Favorite(db.Model):
             result["name"] = self.planet.name
 
         return result
+
+         # return {
+        #     "id": self.id,
+        #     "user_id": self.user_id,
+        #     "character_id": self.character_id,
+        #     "planet_id": self.planet_id
+        # }
