@@ -9,7 +9,7 @@ class User(db.Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     email: Mapped[str] = mapped_column(String(120), unique=True, nullable=False)
-    password: Mapped[str] = mapped_column(nullable=False)
+    password: Mapped[str] = mapped_column(String(120), nullable=False)
     first_name: Mapped[str] = mapped_column(String(50), nullable=False)
     last_name: Mapped[str] = mapped_column(String(50), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean(), nullable=True)
@@ -102,9 +102,4 @@ class Favorite(db.Model):
 
         return result
 
-         # return {
-        #     "id": self.id,
-        #     "user_id": self.user_id,
-        #     "character_id": self.character_id,
-        #     "planet_id": self.planet_id
-        # }
+         

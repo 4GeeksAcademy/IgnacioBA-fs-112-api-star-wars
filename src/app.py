@@ -13,14 +13,15 @@ from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from models import db, User, Planet, Character, Favorite
 from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity, create_access_token
-#from models import Person
+# from models import Person
 
 app = Flask(__name__)
 app.url_map.strict_slashes = False
 
 db_url = os.getenv("DATABASE_URL")
 if db_url is not None:
-    app.config['SQLALCHEMY_DATABASE_URI'] = db_url.replace("postgres://", "postgresql://")
+    app.config['SQLALCHEMY_DATABASE_URI'] = db_url.replace(
+        "postgres://", "postgresql://")
 else:
     app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:////tmp/test.db"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -31,20 +32,26 @@ CORS(app)
 setup_admin(app)
 
 # Setup the Flask-JWT-Extended extension
-app.config["JWT_SECRET_KEY"] = "example_password"  
+app.config["JWT_SECRET_KEY"] = "example_password"
 jwt = JWTManager(app)
 
 # Handle/serialize errors like a JSON object
+
+
 @app.errorhandler(APIException)
 def handle_invalid_usage(error):
     return jsonify(error.to_dict()), error.status_code
 
 # generate sitemap with all your endpoints
+
+
 @app.route('/')
 def sitemap():
     return generate_sitemap(app)
 
 # Get de todos los characters/people
+
+
 @app.route("/people", methods=["GET"])
 def get_all_people():
     try:
@@ -60,15 +67,17 @@ def get_all_people():
 
     except Exception as e:
         return jsonify({"error": "Internal server error", "details": str(e)}), 500
-    
+
 # Get de un character/people
+
+
 @app.route("/people/<int:people_id>", methods=["GET"])
 def get_one_person(people_id):
     try:
         character = Character.query.get(people_id)
         if character is None:
             return jsonify({"error": "Character not found"}), 404
-        
+
         return jsonify(character.serialize()), 200
 
     except SQLAlchemyError as e:
@@ -76,8 +85,10 @@ def get_one_person(people_id):
 
     except Exception as e:
         return jsonify({"error": "Internal server error", "details": str(e)}), 500
-    
+
 # Get de todos los planets
+
+
 @app.route("/planets", methods=["GET"])
 def get_all_planets():
     try:
@@ -93,15 +104,17 @@ def get_all_planets():
 
     except Exception as e:
         return jsonify({"error": "Internal server error", "details": str(e)}), 500
-    
+
 # Get de un planet
+
+
 @app.route("/planets/<int:planet_id>", methods=["GET"])
 def get_one_planet(planet_id):
     try:
         planet = Planet.query.get(planet_id)
         if planet is None:
             return jsonify({"error": "Character not found"}), 404
-        
+
         return jsonify(planet.serialize()), 200
 
     except SQLAlchemyError as e:
@@ -110,16 +123,17 @@ def get_one_planet(planet_id):
     except Exception as e:
         return jsonify({"error": "Internal server error", "details": str(e)}), 500
 
+
 @app.route('/signup', methods=['POST'])
 def signup():
     try:
         data = request.get_json()
 
         email = data.get('email')
-        password = str(data.get('password'))  
+        password = data.get('password')
         first_name = data.get('first_name')
         last_name = data.get('last_name')
-        is_active = data.get('is_active', True)  
+        is_active = data.get('is_active', True)
 
         if not email or not password:
             return jsonify({"msg": "Email and password are required"}), 400
@@ -142,6 +156,7 @@ def signup():
 
     except Exception as e:
         return jsonify({"error": "Server error", "details": str(e)}), 500
+
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -167,7 +182,9 @@ def login():
     except Exception as e:
         return jsonify({"error": "Server error", "details": str(e)}), 500
 
-# Get de todos los users   
+# Get de todos los users
+
+
 @app.route("/users", methods=["GET"])
 def get_all_users():
     try:
@@ -185,8 +202,10 @@ def get_all_users():
         return jsonify({"error": "Internal server error", "details": str(e)}), 500
 
 # Get de los favoritos de un user
+
+
 @app.route("/users/favorites", methods=["GET"])
-@jwt_required()  
+@jwt_required()
 def get_user_favorites():
     try:
         user_id = int(get_jwt_identity())
@@ -205,7 +224,10 @@ def get_user_favorites():
                 result.append({
                     "type": "character",
                     "id": fav.character_id,
-                    "name": fav.character.name
+                    "name": fav.character.name,
+                    "gender": fav.character.gender,
+                    "birth_year": fav.character.birth_year,
+                    "eye_color": fav.character.eye_color
                 })
             elif fav.planet_id:
                 result.append({
@@ -214,14 +236,15 @@ def get_user_favorites():
                     "name": fav.planet.name
                 })
 
-        return jsonify(result), 200
+        return jsonify({"favorites": result}), 200
 
     except SQLAlchemyError as e:
         return jsonify({"error": "Database error", "details": str(e)}), 500
 
     except Exception as e:
         return jsonify({"error": "Internal server error", "details": str(e)}), 500
-    
+
+
 @app.route("/favorite/planet/<int:planet_id>", methods=["POST"])
 def add_favorite_planet(planet_id):
     try:
@@ -252,6 +275,7 @@ def add_favorite_planet(planet_id):
     except Exception as e:
         return jsonify({"error": "Internal server error", "details": str(e)}), 500
 
+
 @app.route("/favorite/people/<int:people_id>", methods=["POST"])
 def add_favorite_character(people_id):
     try:
@@ -281,7 +305,8 @@ def add_favorite_character(people_id):
 
     except Exception as e:
         return jsonify({"error": "Internal server error", "details": str(e)}), 500
-    
+
+
 @app.route("/favorite/planet/<int:planet_id>", methods=["DELETE"])
 def delete_favorite_planet(planet_id):
     try:
@@ -291,7 +316,8 @@ def delete_favorite_planet(planet_id):
         if not user_id:
             return jsonify({"error": "Missing user_id in request body"}), 400
 
-        favorite = Favorite.query.filter_by(user_id=user_id, planet_id=planet_id).first()
+        favorite = Favorite.query.filter_by(
+            user_id=user_id, planet_id=planet_id).first()
 
         if not favorite:
             return jsonify({"error": "Favorite planet not found"}), 404
@@ -307,7 +333,8 @@ def delete_favorite_planet(planet_id):
 
     except Exception as e:
         return jsonify({"error": "Internal server error", "details": str(e)}), 500
-    
+
+
 @app.route("/favorite/people/<int:people_id>", methods=["DELETE"])
 def delete_favorite_character(people_id):
     try:
@@ -317,7 +344,8 @@ def delete_favorite_character(people_id):
         if not user_id:
             return jsonify({"error": "Missing user_id in request body"}), 400
 
-        favorite = Favorite.query.filter_by(user_id=user_id, character_id=people_id).first()
+        favorite = Favorite.query.filter_by(
+            user_id=user_id, character_id=people_id).first()
 
         if not favorite:
             return jsonify({"error": "Favorite character not found"}), 404
@@ -333,6 +361,7 @@ def delete_favorite_character(people_id):
 
     except Exception as e:
         return jsonify({"error": "Internal server error", "details": str(e)}), 500
+
 
 # this only runs if `$ python src/app.py` is executed
 if __name__ == '__main__':
